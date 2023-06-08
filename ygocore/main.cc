@@ -15,16 +15,16 @@ const char *to_c_string(const v8::String::Utf8Value &value)
 
 template <typename I>
 static inline
-I to_integer(v8::Handle<v8::Value> val, I default_value)
+I to_integer(v8::Local<v8::Value> val, I default_value)
 {
   if (val->IsInt32()) {
-    return static_cast<I>(val->Int32Value());
+    return static_cast<I>(Nan::To<int32_t>(val).FromJust());
   }
   if (val->IsUint32()) {
-    return static_cast<I>(val->Uint32Value());
+    return static_cast<I>(Nan::To<uint32_t>(val).FromJust());
   }
   if (val->IsNumber()) {
-    return static_cast<I>(val->IntegerValue());
+    return static_cast<I>(Nan::To<integer_t>(val).FromJust());
   }
 
   return default_value;
@@ -73,8 +73,9 @@ NAN_METHOD(registerScript)
   CHECK_ARG(0, String);
   CHECK_ARG(1, String);
 
-  v8::String::Utf8Value hold_script_name(arg0);
-  v8::String::Utf8Value hold_script_content(arg1);
+  v8::Isolate* isolate = v8::Isolate::GetCurrent();
+  v8::String::Utf8Value hold_script_name(isolate, arg0);
+  v8::String::Utf8Value hold_script_content(isolate, arg1);
 
   const auto script_name    = to_c_string(hold_script_name);
   const auto script_content = to_c_string(hold_script_content);
